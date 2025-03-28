@@ -195,6 +195,7 @@ public class FileUploadView extends VerticalLayout {
         // Add content container to view
         add(contentContainer);
         setHorizontalComponentAlignment(Alignment.CENTER, contentContainer);
+        refreshFileList();
     }
 
     private Div createUploadComponent() {

@@ -12,14 +12,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class FileService {
 
     private static final String UPLOAD_FOLDER = "uploads";
     
     public FileService() {
+        final Logger logger = LoggerFactory.getLogger(FileService.class);
+
         // Ensure the upload directory exists
         createUploadDirectory();
+        logger.debug("Listing files in upload directory: {}", Paths.get(UPLOAD_FOLDER));
+        logger.error("Error reading files");
     }
     
     /**
@@ -33,6 +40,28 @@ public class FileService {
         }
     }
     
+    private String generateUniqueFileName(String originalFileName) {
+        // Basic unique name generation
+        String baseName = originalFileName;
+        String extension = "";
+        int dotIndex = originalFileName.lastIndexOf('.');
+        if (dotIndex > 0) {
+            baseName = originalFileName.substring(0, dotIndex);
+            extension = originalFileName.substring(dotIndex);
+        }
+    
+        Path uploadDir = Paths.get(UPLOAD_FOLDER);
+        String uniqueName = baseName;
+        int counter = 1;
+        
+        while (Files.exists(uploadDir.resolve(uniqueName + extension))) {
+            uniqueName = baseName + "_" + counter;
+            counter++;
+        }
+        
+        return uniqueName + extension;
+    }
+
     /**
      * Save a file from an input stream
      * 
@@ -41,8 +70,9 @@ public class FileService {
      * @return The path where the file was saved
      * @throws IOException If there's an error saving the file
      */
-    public Path saveFile(String fileName, InputStream inputStream) throws IOException {
-        Path targetPath = Paths.get(UPLOAD_FOLDER, fileName);
+    public Path saveFile(String originalFileName, InputStream inputStream) throws IOException {
+        String uniqueFileName = generateUniqueFileName(originalFileName);
+        Path targetPath = Paths.get(UPLOAD_FOLDER, uniqueFileName);
         Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
         return targetPath;
     }
